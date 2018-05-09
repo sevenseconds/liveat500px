@@ -6,6 +6,6 @@ import th.in.droid.liveat500px.dao.PhotoItemListDao;
 
 public interface ApiService {
 
-    @POST
+    @POST("list")
     Call<PhotoItemListDao> loadPhotoList();
 }

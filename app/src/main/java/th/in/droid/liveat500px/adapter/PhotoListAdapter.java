@@ -4,13 +4,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import th.in.droid.liveat500px.manager.PhotoListManager;
 import th.in.droid.liveat500px.view.PhotoListItem;
 
 public class PhotoListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return 10000;
+        PhotoListManager listManager = PhotoListManager.getInstance();
+        if (listManager.getDao() == null) {
+            return 0;
+        }
+        if (listManager.getDao().getData() == null) {
+            return 0;
+        }
+
+        return listManager.getDao().getData().size();
     }
 
     @Override
