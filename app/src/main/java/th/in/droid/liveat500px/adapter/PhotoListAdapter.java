@@ -2,29 +2,39 @@ package th.in.droid.liveat500px.adapter;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 
-import th.in.droid.liveat500px.manager.PhotoListManager;
+import th.in.droid.liveat500px.R;
+import th.in.droid.liveat500px.dao.PhotoItemDao;
+import th.in.droid.liveat500px.dao.PhotoItemListDao;
 import th.in.droid.liveat500px.view.PhotoListItem;
 
 public class PhotoListAdapter extends BaseAdapter {
 
+    private PhotoItemListDao dao;
+    private int lastPosition = -1;
+
+    public void setDao(PhotoItemListDao dao) {
+        this.dao = dao;
+    }
+
     @Override
     public int getCount() {
-        PhotoListManager listManager = PhotoListManager.getInstance();
-        if (listManager.getDao() == null) {
+        if (dao == null) {
             return 0;
         }
-        if (listManager.getDao().getData() == null) {
+        if (dao.getData() == null) {
             return 0;
         }
 
-        return listManager.getDao().getData().size();
+        return dao.getData().size();
     }
 
     @Override
     public Object getItem(int position) {
-        return null;
+        return dao.getData().get(position);
     }
 
     @Override
@@ -40,6 +50,17 @@ public class PhotoListAdapter extends BaseAdapter {
         } else {
             item = new PhotoListItem((parent.getContext()));
         }
+        PhotoItemDao dao = (PhotoItemDao) getItem(position);
+        item.setNameText(dao.getCaption());
+        item.setDescriptionText(dao.getUsername() + "\n" + dao.getCamera());
+        item.setImageUrl(dao.getImageUrl());
+
+        if (position > lastPosition) {
+            Animation animation = AnimationUtils.loadAnimation(parent.getContext(), R.anim.up_from_bottom);
+            item.setAnimation(animation);
+            lastPosition = position;
+        }
+
         return item;
     }
 }

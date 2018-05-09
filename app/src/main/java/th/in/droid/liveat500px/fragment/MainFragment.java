@@ -2,6 +2,7 @@ package th.in.droid.liveat500px.fragment;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +18,6 @@ import th.in.droid.liveat500px.R;
 import th.in.droid.liveat500px.adapter.PhotoListAdapter;
 import th.in.droid.liveat500px.dao.PhotoItemListDao;
 import th.in.droid.liveat500px.manager.HttpManager;
-import th.in.droid.liveat500px.manager.PhotoListManager;
 
 
 public class MainFragment extends Fragment {
@@ -56,11 +56,12 @@ public class MainFragment extends Fragment {
             public void onResponse(Call<PhotoItemListDao> call, Response<PhotoItemListDao> response) {
                 if (response.isSuccessful()) {
                     PhotoItemListDao dao = response.body();
-                    PhotoListManager.getInstance().setDao(dao);
+                    listAdapter.setDao(dao);
                     listAdapter.notifyDataSetChanged();
                     Toast.makeText(getActivity().getApplicationContext(), dao.getData().get(0).getCaption(), Toast.LENGTH_SHORT).show();
                 } else {
                     try {
+                        Log.e("LoadData", response.errorBody().string());
                         Toast.makeText(getActivity().getApplicationContext(), response.errorBody().string(), Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -70,6 +71,7 @@ public class MainFragment extends Fragment {
 
             @Override
             public void onFailure(Call<PhotoItemListDao> call, Throwable t) {
+                Log.e("LoadData", t.toString());
                 Toast.makeText(getActivity().getApplicationContext(), t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
