@@ -36,6 +36,8 @@ public class MainFragment extends Fragment {
     private PhotoListManager photoListManager;
     private Button btnNewPhotos;
 
+    boolean isLoadingMore = false;
+
     public MainFragment() {
         super();
     }
@@ -88,6 +90,11 @@ public class MainFragment extends Fragment {
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                 swipeRefreshLayout.setEnabled(firstVisibleItem == 0);
+                if (firstVisibleItem + visibleItemCount >= totalItemCount) {
+                    if (photoListManager.getCount() > 0) {
+                        loadMoreData();
+                    }
+                }
             }
         });
 
@@ -106,6 +113,7 @@ public class MainFragment extends Fragment {
 
         static final int MODE_RELOAD = 1;
         static final int MODE_RELOAD_NEWER = 2;
+        static final int MODE_LOAD_MORE = 3;
 
         int mode;
 
@@ -125,6 +133,9 @@ public class MainFragment extends Fragment {
 
                 if (mode == MODE_RELOAD_NEWER) {
                     photoListManager.insertDaoAtTopPosition(dao);
+                } else if (mode == MODE_LOAD_MORE) {
+                    photoListManager.appendDaoAtBottomPosition(dao);
+                    isLoadingMore = false;
                 } else {
                     photoListManager.setDao(dao);
                 }
@@ -145,6 +156,9 @@ public class MainFragment extends Fragment {
 
                 Toast.makeText(getActivity().getApplicationContext(), "Load Completed", Toast.LENGTH_SHORT).show();
             } else {
+                if (mode == MODE_LOAD_MORE) {
+                    isLoadingMore = false;
+                }
                 swipeRefreshLayout.setRefreshing(false);
                 try {
                     Log.e("LoadData", response.errorBody().string());
@@ -157,6 +171,9 @@ public class MainFragment extends Fragment {
 
         @Override
         public void onFailure(Call<PhotoItemListDao> call, Throwable t) {
+            if (mode == MODE_LOAD_MORE) {
+                isLoadingMore = false;
+            }
             swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(getActivity().getApplicationContext(), t.toString(), Toast.LENGTH_SHORT).show();
         }
@@ -171,6 +188,16 @@ public class MainFragment extends Fragment {
     private void reloadData() {
         Call<PhotoItemListDao> call = HttpManager.getInstance().getService().loadPhotoList();
         call.enqueue(new PhotoListLoadCallback(PhotoListLoadCallback.MODE_RELOAD));
+    }
+
+    private void loadMoreData() {
+        if (isLoadingMore) {
+            return;
+        }
+        isLoadingMore = true;
+        int minId = photoListManager.getMinId();
+        Call<PhotoItemListDao> call = HttpManager.getInstance().getService().loadPhotoListBeforeId(minId);
+        call.enqueue(new PhotoListLoadCallback(PhotoListLoadCallback.MODE_LOAD_MORE));
     }
 
     @Override
