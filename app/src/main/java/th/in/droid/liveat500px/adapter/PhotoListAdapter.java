@@ -10,12 +10,17 @@ import android.widget.ProgressBar;
 import th.in.droid.liveat500px.R;
 import th.in.droid.liveat500px.dao.PhotoItemDao;
 import th.in.droid.liveat500px.dao.PhotoItemListDao;
+import th.in.droid.liveat500px.datatype.MutableInteger;
 import th.in.droid.liveat500px.view.PhotoListItem;
 
 public class PhotoListAdapter extends BaseAdapter {
 
     private PhotoItemListDao dao;
-    private int lastPosition = -1;
+    private MutableInteger lastPositionInteger;
+
+    public PhotoListAdapter(MutableInteger lastPositionInteger) {
+        this.lastPositionInteger = lastPositionInteger;
+    }
 
     public void setDao(PhotoItemListDao dao) {
         this.dao = dao;
@@ -75,16 +80,16 @@ public class PhotoListAdapter extends BaseAdapter {
         item.setDescriptionText(dao.getUsername() + "\n" + dao.getCamera());
         item.setImageUrl(dao.getImageUrl());
 
-        if (position > lastPosition) {
+        if (position > lastPositionInteger.getValue()) {
             Animation animation = AnimationUtils.loadAnimation(parent.getContext(), R.anim.up_from_bottom);
             item.setAnimation(animation);
-            lastPosition = position;
+            lastPositionInteger.setValue(position);
         }
 
         return item;
     }
 
     public void increaseLastPosition(int amount) {
-        lastPosition += amount;
+        lastPositionInteger.setValue(lastPositionInteger.getValue() + amount);
     }
 }

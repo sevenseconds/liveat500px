@@ -1,9 +1,13 @@
 package th.in.droid.liveat500px.dao;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import java.util.Date;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,7 +28,7 @@ import java.util.List;
         "shutter_speed",
         "aperture"
 })
-public class PhotoItemDao {
+public class PhotoItemDao implements Parcelable {
 
     @JsonProperty("id") private Integer id;
     @JsonProperty("link") private String link;
@@ -34,13 +38,85 @@ public class PhotoItemDao {
     @JsonProperty("username") private String username;
     @JsonProperty("profile_picture") private String profilePicture;
     @JsonProperty("tags") private List<String> tags = null;
-    @JsonProperty("created_time") private String createdTime;
-    @JsonProperty("camera") private Object camera;
-    @JsonProperty("lens") private Object lens;
-    @JsonProperty("focal_length") private Object focalLength;
-    @JsonProperty("iso") private Object iso;
-    @JsonProperty("shutter_speed") private Object shutterSpeed;
-    @JsonProperty("aperture") private Object aperture;
+    @JsonProperty("created_time") private Date createdTime;
+    @JsonProperty("camera") private String camera;
+    @JsonProperty("lens") private String lens;
+    @JsonProperty("focal_length") private String focalLength;
+    @JsonProperty("iso") private String iso;
+    @JsonProperty("shutter_speed") private String shutterSpeed;
+    @JsonProperty("aperture") private String aperture;
+
+    public PhotoItemDao() {}
+
+    protected PhotoItemDao(Parcel in) {
+        if (in.readByte() == 0) {
+            id = null;
+        } else {
+            id = in.readInt();
+        }
+        link = in.readString();
+        imageUrl = in.readString();
+        caption = in.readString();
+        if (in.readByte() == 0) {
+            userId = null;
+        } else {
+            userId = in.readInt();
+        }
+        username = in.readString();
+        profilePicture = in.readString();
+        tags = in.createStringArrayList();
+        camera = in.readString();
+        lens = in.readString();
+        focalLength = in.readString();
+        iso = in.readString();
+        shutterSpeed = in.readString();
+        aperture = in.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        if (id == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeInt(id);
+        }
+        dest.writeString(link);
+        dest.writeString(imageUrl);
+        dest.writeString(caption);
+        if (userId == null) {
+            dest.writeByte((byte) 0);
+        } else {
+            dest.writeByte((byte) 1);
+            dest.writeInt(userId);
+        }
+        dest.writeString(username);
+        dest.writeString(profilePicture);
+        dest.writeStringList(tags);
+        dest.writeString(camera);
+        dest.writeString(lens);
+        dest.writeString(focalLength);
+        dest.writeString(iso);
+        dest.writeString(shutterSpeed);
+        dest.writeString(aperture);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public static final Creator<PhotoItemDao> CREATOR = new Creator<PhotoItemDao>() {
+        @Override
+        public PhotoItemDao createFromParcel(Parcel in) {
+            return new PhotoItemDao(in);
+        }
+
+        @Override
+        public PhotoItemDao[] newArray(int size) {
+            return new PhotoItemDao[size];
+        }
+    };
 
     @JsonProperty("id")
     public Integer getId() {
@@ -123,72 +199,72 @@ public class PhotoItemDao {
     }
 
     @JsonProperty("created_time")
-    public String getCreatedTime() {
+    public Date getCreatedTime() {
         return createdTime;
     }
 
     @JsonProperty("created_time")
-    public void setCreatedTime(String createdTime) {
+    public void setCreatedTime(Date createdTime) {
         this.createdTime = createdTime;
     }
 
     @JsonProperty("camera")
-    public Object getCamera() {
+    public String getCamera() {
         return camera;
     }
 
     @JsonProperty("camera")
-    public void setCamera(Object camera) {
+    public void setCamera(String camera) {
         this.camera = camera;
     }
 
     @JsonProperty("lens")
-    public Object getLens() {
+    public String getLens() {
         return lens;
     }
 
     @JsonProperty("lens")
-    public void setLens(Object lens) {
+    public void setLens(String lens) {
         this.lens = lens;
     }
 
     @JsonProperty("focal_length")
-    public Object getFocalLength() {
+    public String getFocalLength() {
         return focalLength;
     }
 
     @JsonProperty("focal_length")
-    public void setFocalLength(Object focalLength) {
+    public void setFocalLength(String focalLength) {
         this.focalLength = focalLength;
     }
 
     @JsonProperty("iso")
-    public Object getIso() {
+    public String getIso() {
         return iso;
     }
 
     @JsonProperty("iso")
-    public void setIso(Object iso) {
+    public void setIso(String iso) {
         this.iso = iso;
     }
 
     @JsonProperty("shutter_speed")
-    public Object getShutterSpeed() {
+    public String getShutterSpeed() {
         return shutterSpeed;
     }
 
     @JsonProperty("shutter_speed")
-    public void setShutterSpeed(Object shutterSpeed) {
+    public void setShutterSpeed(String shutterSpeed) {
         this.shutterSpeed = shutterSpeed;
     }
 
     @JsonProperty("aperture")
-    public Object getAperture() {
+    public String getAperture() {
         return aperture;
     }
 
     @JsonProperty("aperture")
-    public void setAperture(Object aperture) {
+    public void setAperture(String aperture) {
         this.aperture = aperture;
     }
 

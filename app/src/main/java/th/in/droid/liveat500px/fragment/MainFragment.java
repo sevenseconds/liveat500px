@@ -1,6 +1,7 @@
 package th.in.droid.liveat500px.fragment;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
@@ -23,6 +24,7 @@ import retrofit2.Response;
 import th.in.droid.liveat500px.R;
 import th.in.droid.liveat500px.adapter.PhotoListAdapter;
 import th.in.droid.liveat500px.dao.PhotoItemListDao;
+import th.in.droid.liveat500px.datatype.MutableInteger;
 import th.in.droid.liveat500px.manager.HttpManager;
 import th.in.droid.liveat500px.manager.PhotoListManager;
 
@@ -35,7 +37,8 @@ public class MainFragment extends Fragment {
     private PhotoListManager photoListManager;
     private Button btnNewPhotos;
 
-    boolean isLoadingMore = false;
+    private boolean isLoadingMore = false;
+    private MutableInteger lastPositionInteger;
 
     public MainFragment() {
         super();
@@ -49,17 +52,32 @@ public class MainFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        //Initialize Fragment level's variables
+        init(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            onRestoreInstanceState(savedInstanceState);
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        initInstances(rootView);
+        initInstances(rootView, savedInstanceState);
         return rootView;
     }
 
-    private void initInstances(View rootView) {
-        // Init 'View' instance(s) with rootView.findViewById here
+    private void init(Bundle savedInstanceState) {
         photoListManager = new PhotoListManager();
+        lastPositionInteger = new MutableInteger(-1);
+    }
 
+    private void initInstances(View rootView, Bundle savedInstanceState) {
+        // Init 'View' instance(s) with rootView.findViewById here
         btnNewPhotos = rootView.findViewById(R.id.btn_new_photos);
         btnNewPhotos.setOnClickListener(buttonClickListener);
 
@@ -67,11 +85,14 @@ public class MainFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(pullToRefreshListener);
 
         listView = rootView.findViewById(R.id.listview);
-        listAdapter = new PhotoListAdapter();
+        listAdapter = new PhotoListAdapter(lastPositionInteger);
+        listAdapter.setDao(photoListManager.getDao());
         listView.setAdapter(listAdapter);
         listView.setOnScrollListener(listViewScrollListener);
 
-        refreshData();
+        if (savedInstanceState == null) {
+            refreshData();
+        }
     }
 
     private void refreshData() {
@@ -120,17 +141,21 @@ public class MainFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         // Save Instance State here
+        outState.putBundle("photoListManager", photoListManager.onSaveInstanceState());
+        outState.putBundle("lastPositionInteger", lastPositionInteger.onSaveInstanceState());
     }
 
     /*
      * Restore Instance State Here
      */
+    private void onRestoreInstanceState(Bundle savedInstanceState) {
+        photoListManager.onRestoreInstanceState(savedInstanceState.getBundle("photoListManager"));
+        lastPositionInteger.onRestoreInstanceState(savedInstanceState.getBundle("lastPositionInteger"));
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            // Restore Instance State here
-        }
     }
 
     private void showButtonNewPhotos() {
