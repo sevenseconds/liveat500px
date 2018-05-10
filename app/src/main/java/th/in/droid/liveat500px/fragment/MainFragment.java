@@ -3,7 +3,6 @@ package th.in.droid.liveat500px.fragment;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,41 +61,15 @@ public class MainFragment extends Fragment {
         photoListManager = new PhotoListManager();
 
         btnNewPhotos = rootView.findViewById(R.id.btn_new_photos);
-        btnNewPhotos.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listView.smoothScrollToPosition(0);
-                hideButtonNewPhotos();
-            }
-        });
+        btnNewPhotos.setOnClickListener(buttonClickListener);
 
         swipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshData();
-            }
-        });
+        swipeRefreshLayout.setOnRefreshListener(pullToRefreshListener);
 
         listView = rootView.findViewById(R.id.listview);
         listAdapter = new PhotoListAdapter();
         listView.setAdapter(listAdapter);
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                swipeRefreshLayout.setEnabled(firstVisibleItem == 0);
-                if (firstVisibleItem + visibleItemCount >= totalItemCount) {
-                    if (photoListManager.getCount() > 0) {
-                        loadMoreData();
-                    }
-                }
-            }
-        });
+        listView.setOnScrollListener(listViewScrollListener);
 
         refreshData();
     }
@@ -106,76 +79,6 @@ public class MainFragment extends Fragment {
             reloadData();
         } else {
             reloadNewerData();
-        }
-    }
-
-    class PhotoListLoadCallback implements Callback<PhotoItemListDao> {
-
-        static final int MODE_RELOAD = 1;
-        static final int MODE_RELOAD_NEWER = 2;
-        static final int MODE_LOAD_MORE = 3;
-
-        int mode;
-
-        PhotoListLoadCallback(int mode) {
-            this.mode = mode;
-        }
-
-        @Override
-        public void onResponse(Call<PhotoItemListDao> call, Response<PhotoItemListDao> response) {
-            swipeRefreshLayout.setRefreshing(false);
-            if (response.isSuccessful()) {
-                PhotoItemListDao dao = response.body();
-
-                int firstVisiblePosition = listView.getFirstVisiblePosition();
-                View c = listView.getChildAt(0);
-                int top = c == null ? 0 : c.getTop();
-
-                if (mode == MODE_RELOAD_NEWER) {
-                    photoListManager.insertDaoAtTopPosition(dao);
-                } else if (mode == MODE_LOAD_MORE) {
-                    photoListManager.appendDaoAtBottomPosition(dao);
-                    isLoadingMore = false;
-                } else {
-                    photoListManager.setDao(dao);
-                }
-                listAdapter.setDao(photoListManager.getDao());
-                listAdapter.notifyDataSetChanged();
-
-                if (mode == MODE_RELOAD_NEWER) {
-                    int additonalSize = (dao != null && dao.getData() != null) ? dao.getData().size() : 0;
-                    listAdapter.increaseLastPosition(additonalSize);
-                    listView.setSelectionFromTop(firstVisiblePosition + additonalSize, top);
-
-                    if (additonalSize > 0) {
-                        showButtonNewPhotos();
-                    }
-                } else {
-
-                }
-
-                Toast.makeText(getActivity().getApplicationContext(), "Load Completed", Toast.LENGTH_SHORT).show();
-            } else {
-                if (mode == MODE_LOAD_MORE) {
-                    isLoadingMore = false;
-                }
-                swipeRefreshLayout.setRefreshing(false);
-                try {
-                    Log.e("LoadData", response.errorBody().string());
-                    Toast.makeText(getActivity().getApplicationContext(), response.errorBody().string(), Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        @Override
-        public void onFailure(Call<PhotoItemListDao> call, Throwable t) {
-            if (mode == MODE_LOAD_MORE) {
-                isLoadingMore = false;
-            }
-            swipeRefreshLayout.setRefreshing(false);
-            Toast.makeText(getActivity().getApplicationContext(), t.toString(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -230,7 +133,7 @@ public class MainFragment extends Fragment {
         }
     }
 
-    public void showButtonNewPhotos() {
+    private void showButtonNewPhotos() {
         btnNewPhotos.setVisibility(View.VISIBLE);
         Animation anim = AnimationUtils.loadAnimation(
                 Contextor.getInstance().getContext(),
@@ -239,12 +142,123 @@ public class MainFragment extends Fragment {
         btnNewPhotos.startAnimation(anim);
     }
 
-    public void hideButtonNewPhotos() {
+    private void hideButtonNewPhotos() {
         btnNewPhotos.setVisibility(View.GONE);
         Animation anim = AnimationUtils.loadAnimation(
                 Contextor.getInstance().getContext(),
                 R.anim.zoom_fade_out
         );
         btnNewPhotos.startAnimation(anim);
+    }
+
+    private void showToast(String text) {
+        Toast.makeText(Contextor.getInstance().getContext(), text, Toast.LENGTH_SHORT).show();
+    }
+
+    SwipeRefreshLayout.OnRefreshListener pullToRefreshListener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            refreshData();
+        }
+    };
+
+    View.OnClickListener buttonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v == btnNewPhotos) {
+                listView.smoothScrollToPosition(0);
+                hideButtonNewPhotos();
+            }
+        }
+    };
+
+    AbsListView.OnScrollListener listViewScrollListener = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            if (view == listView) {
+                swipeRefreshLayout.setEnabled(firstVisibleItem == 0);
+                if (firstVisibleItem + visibleItemCount >= totalItemCount) {
+                    if (photoListManager.getCount() > 0) {
+                        loadMoreData();
+                    }
+                }
+            }
+        }
+    };
+
+    class PhotoListLoadCallback implements Callback<PhotoItemListDao> {
+
+        static final int MODE_RELOAD = 1;
+        static final int MODE_RELOAD_NEWER = 2;
+        static final int MODE_LOAD_MORE = 3;
+
+        int mode;
+
+        PhotoListLoadCallback(int mode) {
+            this.mode = mode;
+        }
+
+        @Override
+        public void onResponse(Call<PhotoItemListDao> call, Response<PhotoItemListDao> response) {
+            swipeRefreshLayout.setRefreshing(false);
+            if (response.isSuccessful()) {
+                PhotoItemListDao dao = response.body();
+
+                int firstVisiblePosition = listView.getFirstVisiblePosition();
+                View c = listView.getChildAt(0);
+                int top = c == null ? 0 : c.getTop();
+
+                if (mode == MODE_RELOAD_NEWER) {
+                    photoListManager.insertDaoAtTopPosition(dao);
+                } else if (mode == MODE_LOAD_MORE) {
+                    photoListManager.appendDaoAtBottomPosition(dao);
+                } else {
+                    photoListManager.setDao(dao);
+                }
+                clearLoadingMoreFlagIfCapable(mode);
+                listAdapter.setDao(photoListManager.getDao());
+                listAdapter.notifyDataSetChanged();
+
+                if (mode == MODE_RELOAD_NEWER) {
+                    int additonalSize = (dao != null && dao.getData() != null) ? dao.getData().size() : 0;
+                    listAdapter.increaseLastPosition(additonalSize);
+                    listView.setSelectionFromTop(firstVisiblePosition + additonalSize, top);
+
+                    if (additonalSize > 0) {
+                        showButtonNewPhotos();
+                    }
+                } else {
+
+                }
+
+                showToast("Load Completed");
+            } else {
+                clearLoadingMoreFlagIfCapable(mode);
+                swipeRefreshLayout.setRefreshing(false);
+                try {
+                    showToast(response.errorBody().string());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        public void onFailure(Call<PhotoItemListDao> call, Throwable t) {
+            clearLoadingMoreFlagIfCapable(mode);
+            swipeRefreshLayout.setRefreshing(false);
+            showToast(t.toString());
+        }
+
+        private void clearLoadingMoreFlagIfCapable(int mode) {
+            if (mode == MODE_LOAD_MORE) {
+                isLoadingMore = false;
+            }
+        }
     }
 }
