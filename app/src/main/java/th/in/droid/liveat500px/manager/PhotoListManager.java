@@ -1,11 +1,14 @@
 package th.in.droid.liveat500px.manager;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ListView;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inthecheesefactory.thecheeselibrary.manager.Contextor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import th.in.droid.liveat500px.dao.PhotoItemDao;
@@ -18,6 +21,7 @@ public class PhotoListManager {
 
     public PhotoListManager() {
         mContext = Contextor.getInstance().getContext();
+        loadCache();
     }
 
     public PhotoItemListDao getDao() {
@@ -26,6 +30,7 @@ public class PhotoListManager {
 
     public void setDao(PhotoItemListDao dao) {
         this.dao = dao;
+        saveCache();
     }
 
     public void insertDaoAtTopPosition(PhotoItemListDao newDao) {
@@ -36,6 +41,7 @@ public class PhotoListManager {
             dao.setData(new ArrayList<PhotoItemDao>());
         }
         dao.getData().addAll(0, newDao.getData());
+        saveCache();
     }
 
     public void appendDaoAtBottomPosition(PhotoItemListDao newDao) {
@@ -46,6 +52,7 @@ public class PhotoListManager {
             dao.setData(new ArrayList<PhotoItemDao>());
         }
         dao.getData().addAll(dao.getData().size(), newDao.getData());
+        saveCache();
     }
 
     public int getMaxId() {
@@ -104,5 +111,40 @@ public class PhotoListManager {
 
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         dao = savedInstanceState.getParcelable("dao");
+    }
+
+    private void saveCache() {
+        PhotoItemListDao cacheDao = new PhotoItemListDao();
+        String json = null;
+        if (dao != null && dao.getData() != null) {
+            cacheDao.setData(dao.getData().subList(0, Math.min(50, dao.getData().size())));
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                json = mapper.writeValueAsString(cacheDao);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        SharedPreferences prefs = mContext.getSharedPreferences("photos", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        if (json != null) {
+            editor.putString("json", json);
+        }
+        editor.apply();
+    }
+
+    private void loadCache() {
+        SharedPreferences prefs = mContext.getSharedPreferences("photos", Context.MODE_PRIVATE);
+        String json = prefs.getString("json", null);
+        if (json == null) {
+            return;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            dao = mapper.readValue(json, PhotoItemListDao.class);
+        } catch (IOException e) {
+            dao = new PhotoItemListDao();
+        }
     }
 }
