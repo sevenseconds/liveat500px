@@ -3,6 +3,7 @@
     <string name="open_menu">Open Menu</string>
     <string name="close_menu">Close Menu</string>
     <string name="photo">Photo</string>
+    <string name="action_share">Share</string>
     <string-array name="tab_titles">
         <item>Summary</item>
         <item>Info</item>
