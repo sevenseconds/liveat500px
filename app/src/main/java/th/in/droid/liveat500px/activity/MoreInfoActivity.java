@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.MenuItem;
 
 import th.in.droid.liveat500px.R;
+import th.in.droid.liveat500px.dao.PhotoItemDao;
 import th.in.droid.liveat500px.fragment.MoreInfoFragment;
 
 public class MoreInfoActivity extends AppCompatActivity {
@@ -16,10 +17,12 @@ public class MoreInfoActivity extends AppCompatActivity {
 
         initInstances();
 
+        PhotoItemDao dao = getIntent().getParcelableExtra("dao");
+
         if (savedInstanceState == null) {
             getSupportFragmentManager()
                     .beginTransaction()
-                    .add(R.id.content_container, MoreInfoFragment.newInstance())
+                    .add(R.id.content_container, MoreInfoFragment.newInstance(dao))
                     .commit();
         }
     }

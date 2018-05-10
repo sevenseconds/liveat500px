@@ -8,17 +8,21 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import th.in.droid.liveat500px.R;
+import th.in.droid.liveat500px.dao.PhotoItemDao;
 
 
 public class PhotoInfoFragment extends Fragment {
+
+    private PhotoItemDao dao;
 
     public PhotoInfoFragment() {
         super();
     }
 
-    public static PhotoInfoFragment newInstance() {
+    public static PhotoInfoFragment newInstance(PhotoItemDao dao) {
         PhotoInfoFragment fragment = new PhotoInfoFragment();
         Bundle args = new Bundle();
+        args.putParcelable("dao", dao);
         fragment.setArguments(args);
         return fragment;
     }
@@ -27,6 +31,8 @@ public class PhotoInfoFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         init(savedInstanceState);
+
+        dao = getArguments().getParcelable("dao");
 
         if (savedInstanceState != null)
             onRestoreInstanceState(savedInstanceState);
@@ -50,6 +56,7 @@ public class PhotoInfoFragment extends Fragment {
         // Init 'View' instance(s) with rootView.findViewById here
         // Note: State of variable initialized here could not be saved
         //       in onSavedInstanceState
+        // TODO: Implement Info Fragment
     }
 
     @Override

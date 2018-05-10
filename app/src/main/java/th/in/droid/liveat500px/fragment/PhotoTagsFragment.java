@@ -8,17 +8,21 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import th.in.droid.liveat500px.R;
+import th.in.droid.liveat500px.dao.PhotoItemDao;
 
 
 public class PhotoTagsFragment extends Fragment {
+
+    private PhotoItemDao dao;
 
     public PhotoTagsFragment() {
         super();
     }
 
-    public static PhotoTagsFragment newInstance() {
+    public static PhotoTagsFragment newInstance(PhotoItemDao dao) {
         PhotoTagsFragment fragment = new PhotoTagsFragment();
         Bundle args = new Bundle();
+        args.putParcelable("dao", dao);
         fragment.setArguments(args);
         return fragment;
     }
@@ -27,6 +31,8 @@ public class PhotoTagsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         init(savedInstanceState);
+
+        dao = getArguments().getParcelable("dao");
 
         if (savedInstanceState != null)
             onRestoreInstanceState(savedInstanceState);
@@ -50,6 +56,7 @@ public class PhotoTagsFragment extends Fragment {
         // Init 'View' instance(s) with rootView.findViewById here
         // Note: State of variable initialized here could not be saved
         //       in onSavedInstanceState
+        // TODO: Implement Tags Fragment
     }
 
     @Override

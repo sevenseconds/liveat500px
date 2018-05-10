@@ -72,8 +72,9 @@ public class MainActivity extends AppCompatActivity implements MainFragment.Main
     }
 
     @Override
-    public void onPhotoItemClicked(PhotoItemDao item) {
+    public void onPhotoItemClicked(PhotoItemDao dao) {
         Intent intent = new Intent(MainActivity.this, MoreInfoActivity.class);
+        intent.putExtra("dao", dao);
         startActivity(intent);
     }
 }
