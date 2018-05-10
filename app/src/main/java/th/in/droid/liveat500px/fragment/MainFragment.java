@@ -1,5 +1,6 @@
 package th.in.droid.liveat500px.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,6 +11,7 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -22,7 +24,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import th.in.droid.liveat500px.R;
+import th.in.droid.liveat500px.activity.MoreInfoActivity;
 import th.in.droid.liveat500px.adapter.PhotoListAdapter;
+import th.in.droid.liveat500px.dao.PhotoItemDao;
 import th.in.droid.liveat500px.dao.PhotoItemListDao;
 import th.in.droid.liveat500px.datatype.MutableInteger;
 import th.in.droid.liveat500px.manager.HttpManager;
@@ -39,6 +43,10 @@ public class MainFragment extends Fragment {
 
     private boolean isLoadingMore = false;
     private MutableInteger lastPositionInteger;
+
+    public interface MainFragmentListener {
+        void onPhotoItemClicked(PhotoItemDao item);
+    }
 
     public MainFragment() {
         super();
@@ -89,6 +97,7 @@ public class MainFragment extends Fragment {
         listAdapter.setDao(photoListManager.getDao());
         listView.setAdapter(listAdapter);
         listView.setOnScrollListener(listViewScrollListener);
+        listView.setOnItemClickListener(listviewItemClickListener);
 
         if (savedInstanceState == null) {
             refreshData();
@@ -212,6 +221,17 @@ public class MainFragment extends Fragment {
                         loadMoreData();
                     }
                 }
+            }
+        }
+    };
+
+    AdapterView.OnItemClickListener listviewItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (position < photoListManager.getCount()) {
+                PhotoItemDao item = photoListManager.getDao().getData().get(position);
+                MainFragmentListener listener = (MainFragmentListener) getActivity();
+                listener.onPhotoItemClicked(item);
             }
         }
     };
