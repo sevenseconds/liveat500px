@@ -7,9 +7,14 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.inthecheesefactory.thecheeselibrary.manager.Contextor;
 
 import java.io.IOException;
 
@@ -29,6 +34,7 @@ public class MainFragment extends Fragment {
     private PhotoListAdapter listAdapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private PhotoListManager photoListManager;
+    private Button btnNewPhotos;
 
     public MainFragment() {
         super();
@@ -52,6 +58,15 @@ public class MainFragment extends Fragment {
     private void initInstances(View rootView) {
         // Init 'View' instance(s) with rootView.findViewById here
         photoListManager = new PhotoListManager();
+
+        btnNewPhotos = rootView.findViewById(R.id.btn_new_photos);
+        btnNewPhotos.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listView.smoothScrollToPosition(0);
+                hideButtonNewPhotos();
+            }
+        });
 
         swipeRefreshLayout = rootView.findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -103,6 +118,11 @@ public class MainFragment extends Fragment {
             swipeRefreshLayout.setRefreshing(false);
             if (response.isSuccessful()) {
                 PhotoItemListDao dao = response.body();
+
+                int firstVisiblePosition = listView.getFirstVisiblePosition();
+                View c = listView.getChildAt(0);
+                int top = c == null ? 0 : c.getTop();
+
                 if (mode == MODE_RELOAD_NEWER) {
                     photoListManager.insertDaoAtTopPosition(dao);
                 } else {
@@ -110,6 +130,19 @@ public class MainFragment extends Fragment {
                 }
                 listAdapter.setDao(photoListManager.getDao());
                 listAdapter.notifyDataSetChanged();
+
+                if (mode == MODE_RELOAD_NEWER) {
+                    int additonalSize = (dao != null && dao.getData() != null) ? dao.getData().size() : 0;
+                    listAdapter.increaseLastPosition(additonalSize);
+                    listView.setSelectionFromTop(firstVisiblePosition + additonalSize, top);
+
+                    if (additonalSize > 0) {
+                        showButtonNewPhotos();
+                    }
+                } else {
+
+                }
+
                 Toast.makeText(getActivity().getApplicationContext(), "Load Completed", Toast.LENGTH_SHORT).show();
             } else {
                 swipeRefreshLayout.setRefreshing(false);
@@ -168,5 +201,23 @@ public class MainFragment extends Fragment {
         if (savedInstanceState != null) {
             // Restore Instance State here
         }
+    }
+
+    public void showButtonNewPhotos() {
+        btnNewPhotos.setVisibility(View.VISIBLE);
+        Animation anim = AnimationUtils.loadAnimation(
+                Contextor.getInstance().getContext(),
+                R.anim.zoom_fade_in
+        );
+        btnNewPhotos.startAnimation(anim);
+    }
+
+    public void hideButtonNewPhotos() {
+        btnNewPhotos.setVisibility(View.GONE);
+        Animation anim = AnimationUtils.loadAnimation(
+                Contextor.getInstance().getContext(),
+                R.anim.zoom_fade_out
+        );
+        btnNewPhotos.startAnimation(anim);
     }
 }
